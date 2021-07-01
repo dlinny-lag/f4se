@@ -451,7 +451,8 @@ public:
 	};
 
 	tArray<Data350>	unk350;				// 350
-	UInt64	unk368[(0x418-0x368)/8];
+	BSReadWriteLock avLock;
+	UInt64	unk368[(0x418-0x370)/8];
 	TESRace			* race;				// 418
 	UInt64			unk420;				// 420
 	ActorEquipData	* equipData;		// 428
