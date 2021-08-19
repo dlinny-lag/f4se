@@ -12,7 +12,7 @@ public:
 	~VMStruct() { }
 
 	enum { kTypeID = 0 };
-
+	static inline const char* StructName = T_structName;
 	// Will make the VM return None instead of a structure with nothing defined
 	void SetNone(bool bNone) { m_none = bNone; }
 	bool IsNone() const { return m_none; }
@@ -154,7 +154,7 @@ public:
 
 		structName.Release();
 	}
-
+	VMValue::StructData*& StructDataRef() { return m_struct; }
 protected:
 	bool m_none;
 	VMValue::StructData * m_struct;
