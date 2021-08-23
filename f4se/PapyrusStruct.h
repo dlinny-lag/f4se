@@ -12,7 +12,9 @@ public:
 	~VMStruct() { }
 
 	enum { kTypeID = 0 };
+#if (__cplusplus >= 201703L )
 	static inline const char* StructName = T_structName;
+#endif
 	// Will make the VM return None instead of a structure with nothing defined
 	void SetNone(bool bNone) { m_none = bNone; }
 	bool IsNone() const { return m_none; }
