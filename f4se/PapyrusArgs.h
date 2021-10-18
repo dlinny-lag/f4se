@@ -308,6 +308,12 @@ public:
 		m_value = *value;
 	}
 
+	// use with caution!
+	VMValue& ValueRef()
+	{
+		return m_value;
+	}
+
 protected:
 	VMValue		m_value;
 };
