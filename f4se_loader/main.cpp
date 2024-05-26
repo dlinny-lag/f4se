@@ -39,7 +39,7 @@ void AugmentEnvironment(const std::string& procPath, const std::string& dllPath)
 
 int main(int argc, char ** argv)
 {
-	gLog.OpenRelative(CSIDL_MYDOCUMENTS, "\\My Games\\Fallout4\\F4SE\\f4se_loader.log");
+	gLog.OpenRelative(CSIDL_MYDOCUMENTS, "\\My Games\\" SAVE_FOLDER_NAME "\\F4SE\\f4se_loader.log");
 	gLog.SetPrintLevel(IDebugLog::kLevel_FatalError);
 	gLog.SetLogLevel(IDebugLog::kLevel_DebugMessage);
 
@@ -136,14 +136,34 @@ int main(int argc, char ** argv)
 		IFileStream	fileCheck;
 		if(!fileCheck.Open(procPath.c_str()))
 		{
-			if(usedCustomRuntimeName)
+			DWORD err = GetLastError();
+			if(err)
+				_MESSAGE("exe open check error = %08X", err);
+
+			bool msStore = false;
+
+			if(err == ERROR_ACCESS_DENIED)
 			{
-				// hurr durr
+				// this might be ms store
+				std::string manifestPath = runtimeDir + "appxmanifest.xml";
+
+				if(fileCheck.Open(manifestPath.c_str()))
+				{
+					msStore = true;
+				}
+			}
+
+			if(msStore)
+			{
+				PrintLoaderError("You have the MS Store/Gamepass version of Fallout 4, which is not compatible with F4SE.");
+			}
+			else if(usedCustomRuntimeName)
+			{
 				PrintLoaderError("Couldn't find %s. You have customized the runtime name via F4SE's .ini file, and that file does not exist. This can usually be fixed by removing the RuntimeName line from the .ini file.)", procName.c_str());
 			}
 			else
 			{
-				PrintLoaderError("Couldn't find %s.", procName.c_str());
+				PrintLoaderError("Couldn't find %s. You have installed the loader to the wrong folder.", procName.c_str());
 			}
 
 			return 1;
@@ -284,32 +304,12 @@ int main(int argc, char ** argv)
 	bool	injectionSucceeded = false;
 	UInt32	procType = procHookInfo.procType;
 
-	if(g_options.m_forceSteamLoader)
-	{
-		_MESSAGE("forcing steam loader");
-		procType = kProcType_Steam;
-	}
-
 	// inject the dll
 	switch(procType)
 	{
 	case kProcType_Steam:
-		{
-			std::string	steamHookDllPath = runtimeDir + "\\f4se_steam_loader.dll";
-
-			injectionSucceeded = InjectDLLThread(&procInfo, steamHookDllPath.c_str(), true, g_options.m_noTimeout);
-		}
-		break;
-
 	case kProcType_Normal:
-#if 0
-		if(InjectDLL(&procInfo, dllPath.c_str(), &procHookInfo))
-		{
-			injectionSucceeded = true;
-		}
-#else
 		injectionSucceeded = InjectDLLThread(&procInfo, dllPath.c_str(), true, g_options.m_noTimeout);
-#endif
 		break;
 
 	default:
@@ -336,14 +336,6 @@ int main(int argc, char ** argv)
 			_WARNING("Try running f4se_loader as an administrator, or check for conflicts with a virus scanner.");
 		}
 
-		if(g_options.m_moduleInfo)
-		{
-			Sleep(1000 * 3);	// wait 3 seconds
-
-			PrintModuleInfo(procInfo.dwProcessId);
-			PrintProcessInfo();
-		}
-
 		if(g_options.m_waitForClose)
 			WaitForSingleObject(procInfo.hProcess, INFINITE);
 	}
@@ -353,65 +345,4 @@ int main(int argc, char ** argv)
 	CloseHandle(procInfo.hThread);
 
 	return 0;
-}
-
-static void PrintModuleInfo(UInt32 procID)
-{
-	HANDLE	snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procID);
-	if(snap != INVALID_HANDLE_VALUE)
-	{
-		MODULEENTRY32	module;
-
-		module.dwSize = sizeof(module);
-
-		if(Module32First(snap, &module))
-		{
-			do 
-			{
-				_MESSAGE("%08Xx%08X %08X %s %s", module.modBaseAddr, module.modBaseSize, module.hModule, module.szModule, module.szExePath);
-			}
-			while(Module32Next(snap, &module));
-		}
-		else
-		{
-			_ERROR("PrintModuleInfo: Module32First failed (%d)", GetLastError());
-		}
-
-		CloseHandle(snap);
-	}
-	else
-	{
-		_ERROR("PrintModuleInfo: CreateToolhelp32Snapshot failed (%d)", GetLastError());
-	}
-}
-
-static void PrintProcessInfo()
-{
-	HANDLE	snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	if(snap != INVALID_HANDLE_VALUE)
-	{
-		PROCESSENTRY32	proc;
-
-		proc.dwSize = sizeof(PROCESSENTRY32);
-		
-		if(Process32First(snap, &proc))
-		{
-			do
-			{
-				_MESSAGE("%s", proc.szExeFile);
-				proc.dwSize = sizeof(PROCESSENTRY32);
-			}
-			while (Process32Next(snap, &proc));
-		}
-		else
-		{
-			_ERROR("PrintProcessInfo: Process32First failed (%d)", GetLastError());
-		}
-
-		CloseHandle(snap);
-	}
-	else
-	{
-		_ERROR("PrintProcessInfo: CreateToolhelp32Snapshot failed (%d)", GetLastError());
-	}
 }

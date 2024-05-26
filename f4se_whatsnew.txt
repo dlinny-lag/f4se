@@ -1,8 +1,35 @@
-0.6.24
-- ScriptObject.RegisterForGamepadButton and related
+0.7.3
+- passing -- as a command line argument to f4se_loader ignores following arguments
+
+0.7.2
+- support for runtime 1.10.984
+- fix loading some plugins with additional exports
+- remove user-facing text referencing starfield
+- SplineUtils::ConnectSpline (fixes ObjectReference.AttachWireLatent)
+- fix BSHash::operator() generic specialization
+- GetObjectAtConnectPoint, fixes ObjectReference.GetConnectPointsLatent, TransmitConnectedPowerLatent (thanks shad0wshayd3)
+
+0.7.1
+- fix GetGameSetting and related functions
+- fix accidental references to SKSE paths/names when transplanting code
+- fix guess at addresslib name
+- add API to retrieve save folder name (usable during preload). folder names are guessed because GOG doesn't exist yet and I don't have epic
+
+0.7.0
+- support for runtime 1.10.980 "next generation" update
+- plugin manager uses declarative versions similar to skse64 after the AE update
+- plugin manager supports preloading
+- f4se_steam_loader.dll no longer needed
+- ScriptObject.RegisterForGamepadButton and related (thanks TommInfinite)
 - Form.GetEditorID
-- handle 'None' as an array member when passed to custom papyrus functions
+- handle 'None' as an array member when passed to custom papyrus functions (thanks TommInfinite)
 - fix ScriptObject.RegisterForFurnitureEvent filters
+
+Functions with issues:
+	The workshop connection functions were heavy victims of inlining changes due to the updated compiler. Specifically:
+		ObjectReference.AttachWireLatent needs rework, disabled
+		ObjectReference.GetConnectPointsLatent does not return object
+		ObjectReference.TransmitConnectedPowerLatent does not work
 
 0.6.23
 - workaround for bug in High FPS Physics Fix

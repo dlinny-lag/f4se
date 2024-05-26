@@ -1,14 +1,14 @@
 #include "f4se/GameSettings.h"
 #include "f4se/GameTypes.h"
 
-// 5B1FD95B3A1729A1781BED06D47E1A47EB6D89F2+91
-RelocPtr <INISettingCollection *> g_iniSettings(0x05EDB528);
-// 239A2F4B85F2D36A7E4E77D681108A197210AE0B+1C3
-RelocPtr <INIPrefSettingCollection*> g_iniPrefSettings(0x05B5BE58);
-// BB90A8EF53ACD0FD20E1375DC897E55412F59DA7+1B5
-RelocPtr <RegSettingCollection *> g_regSettings(0x0609BDC0);
-// F5934CAD9DF949394DA330793D5F9CCA9711A806+149
-RelocPtr <GameSettingCollection *> g_gameSettings(0x058E1030);
+// 
+RelocPtr <INISettingCollection *> g_iniSettings(0x03195198);
+// 
+RelocPtr <INIPrefSettingCollection*> g_iniPrefSettings(0x030EF6D0);
+// 
+RelocPtr <RegSettingCollection *> g_regSettings(0x03624AC0);
+// 
+RelocPtr <GameSettingCollection *> g_gameSettings(0x02E763E0);
 
 UInt32 Setting::GetType(void) const
 {
@@ -110,9 +110,8 @@ Setting * GetINISetting(const char * name)
 Setting * GetGameSetting(const char * name)
 {
 	Setting * setting = nullptr;
-	Setting ** setting2 = &setting;
 	BSAutoFixedString searchName(name);
-	(*g_gameSettings)->Get(&searchName, &setting2);
+	(*g_gameSettings)->Get(&searchName, &setting);
 	return setting;
 }
 

@@ -439,7 +439,7 @@ namespace papyrusObjectReference {
 					if(parent != root && refr->parentCell) {
 						bhkWorld * world = CALL_MEMBER_FN(refr->parentCell, GetHavokWorld)();
 						if(world) {
-							TESObjectREFR * connected = GetObjectAtConnectPoint(refr, &worldPos, world, 8.0f);
+							TESObjectREFR * connected = GetObjectAtConnectPoint(*refr, worldPos, *world, 8.0f);
 							if(connected) {
 								point.Set<TESObjectREFR*>("object", connected);
 							}
@@ -533,7 +533,7 @@ namespace papyrusObjectReference {
 			if(parent != root && refr->parentCell) {
 				bhkWorld * world = CALL_MEMBER_FN(refr->parentCell, GetHavokWorld)();
 				if(world) {
-					TESObjectREFR * connected = GetObjectAtConnectPoint(refr, &worldPos, world, 8.0f);
+					TESObjectREFR * connected = GetObjectAtConnectPoint(*refr, worldPos, *world, 8.0f);
 					if(connected) {
 						try // Probably wont make a difference but doesnt hurt to try
 						{
