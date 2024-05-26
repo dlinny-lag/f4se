@@ -130,6 +130,7 @@ PluginAllocator	g_localPluginAllocator;
 
 PluginManager::LoadedPlugin *	PluginManager::s_currentLoadingPlugin = NULL;
 PluginHandle					PluginManager::s_currentPluginHandle = 0;
+bool							PluginManager::s_hideTrampolineInterface = false;
 
 static const F4SEInterface g_F4SEInterface =
 {
@@ -205,7 +206,8 @@ static const F4SETaskInterface	g_F4SETaskInterface =
 	F4SETaskInterface::kInterfaceVersion,
 
 	TaskInterface::AddTask,
-	TaskInterface::AddUITask
+	TaskInterface::AddUITask,
+	TaskInterface::AddTaskPermanent
 };
 
 #include "f4se/PapyrusDelayFunctors.h"
@@ -324,7 +326,10 @@ void * PluginManager::QueryInterface(UInt32 id)
 		result = (void *)&g_F4SEObjectInterface;
 		break;
 	case kInterface_Trampoline:
-		result = (void *)&g_F4SETrampolineInterface;
+		if(s_hideTrampolineInterface)
+			_WARNING("hiding trampoline interface from buggy plugin");
+		else
+			result = (void *)&g_F4SETrampolineInterface;
 		break;
 	default:
 		_WARNING("unknown QueryInterface %08X", id);
@@ -387,6 +392,7 @@ void PluginManager::InstallPlugins(void)
 
 		s_currentLoadingPlugin = &plugin;
 		s_currentPluginHandle = m_plugins.size() + 1;	// +1 because 0 is reserved for internal use
+		s_hideTrampolineInterface = false;
 
 		plugin.handle = LoadLibraryA(pluginPath.c_str());
 		if(plugin.handle)
@@ -517,8 +523,9 @@ const char * PluginManager::SafeCallLoadPlugin(LoadedPlugin * plugin, const F4SE
 
 enum
 {
-	kCompat_BlockFromRuntime =	1 << 0,
-	kCompat_BlockFromEditor =	1 << 1,
+	kCompat_BlockFromRuntime =			1 << 0,
+	kCompat_BlockFromEditor =			1 << 1,
+	kCompat_HideTrampolineInterface =	1 << 2,
 };
 
 struct MinVersionEntry
@@ -531,6 +538,7 @@ struct MinVersionEntry
 
 static const MinVersionEntry	kMinVersionList[] =
 {
+	{	"High FPS Physics Fix", 0x0000000F, "overallocates its trampoline request and crashes", kCompat_HideTrampolineInterface },
 	{	NULL, 0, NULL }
 };
 
@@ -565,6 +573,12 @@ const char * PluginManager::CheckPluginCompatibility(LoadedPlugin * plugin)
 						return iter->reason;
 					}
 #endif
+
+					if(iter->compatFlags & kCompat_HideTrampolineInterface)
+					{
+						// don't block from loading, just hide the interface
+						s_hideTrampolineInterface = true;
+					}
 				}
 
 				break;
